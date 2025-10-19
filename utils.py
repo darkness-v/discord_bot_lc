@@ -1,5 +1,8 @@
 import requests
+from database import get_db
+
 USER_FILE = "user_data.json"
+
 def fetch_daily_question():
     url = "https://leetcode.com/graphql"
     query = {
@@ -28,19 +31,42 @@ def fetch_daily_question():
     }
 
 def load_links():
-    import json
+    """Load all user links - tries database first, falls back to JSON"""
     try:
-        with open(USER_FILE, "r") as f:
-            return json.load(f)
-    except FileNotFoundError:
-        return {}
+        db = get_db()
+        return db.get_all_links()
+    except Exception as e:
+        print(f"Database error, falling back to JSON: {e}")
+        import json
+        try:
+            with open(USER_FILE, "r") as f:
+                return json.load(f)
+        except FileNotFoundError:
+            return {}
     
 def save_links(dc_id, lc_username):
-  data = load_links()
-  data[str(dc_id)] = lc_username
-  import json
-  with open(USER_FILE, "w") as f:
-      json.dump(data, f)
+    """Save user link - uses database"""
+    try:
+        db = get_db()
+        db.save_link(str(dc_id), lc_username)
+        print(f"✓ Saved {dc_id} -> {lc_username} to database")
+    except Exception as e:
+        print(f"Database error, falling back to JSON: {e}")
+        data = load_links()
+        data[str(dc_id)] = lc_username
+        import json
+        with open(USER_FILE, "w") as f:
+            json.dump(data, f)
+
+def get_leetcode_username(dc_id):
+    """Get LeetCode username for a Discord ID"""
+    try:
+        db = get_db()
+        return db.get_link(str(dc_id))
+    except Exception as e:
+        print(f"Database error, falling back to JSON: {e}")
+        links = load_links()
+        return links.get(str(dc_id))
 
 def fetch_lc_stats(leetcode_username):
     url = f"https://leetcode-stats-api.herokuapp.com/{leetcode_username}"

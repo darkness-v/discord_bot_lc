@@ -51,6 +51,34 @@ To run your bot 24/7, deploy it to a cloud platform. See **[DEPLOYMENT.md](DEPLO
 
 See [DEPLOYMENT.md](DEPLOYMENT.md) for step-by-step guides for Railway, Render, and DigitalOcean.
 
+## Database
+
+The bot uses a database to store Discord → LeetCode username mappings:
+
+- **Local development**: Uses SQLite (stored in `discord_bot.db`)
+- **Cloud deployment**: Automatically uses PostgreSQL when `DATABASE_URL` is set
+- **Migration**: Automatically imports data from `user_data.json` on first run
+
+### Why Database?
+- ✅ Data persists across bot restarts in cloud
+- ✅ Handles concurrent writes safely
+- ✅ Scalable for many users
+- ✅ Works seamlessly in production
+
+## Deployment
+
+Ready to deploy? See **[DEPLOYMENT.md](DEPLOYMENT.md)** for detailed guides on:
+- Railway.app (recommended - easiest setup)
+- Render.com (free tier available)
+- Fly.io (more control)
+
+**TL;DR for Railway:**
+1. Push code to GitHub
+2. Connect repo to Railway
+3. Add PostgreSQL database
+4. Set environment variables
+5. Deploy! 🚀
+
 ## Recent Fixes
 
 ### Issues Fixed:
@@ -60,6 +88,9 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for step-by-step guides for Railway, Render, 
 4. **Timezone**: Added Vietnam timezone (Asia/Ho_Chi_Minh) for the daily task
 5. **Error handling**: Added try-catch and better error messages for debugging
 6. **Channel validation**: Added check to ensure channel exists before sending messages
+7. **Forum support**: Bot now creates beautiful forum threads for daily questions
+8. **Database**: User data now persists in database (PostgreSQL/SQLite) instead of JSON file
+9. **Pretty embeds**: Enhanced visual display for profiles and solutions
 
 ### Timezone Note:
 The bot now uses `pytz` to set the timezone to Vietnam time (UTC+7). If you're in a different timezone, change this line in `bot.py`:
