@@ -87,6 +87,7 @@ def fetch_submission(leetcode_username, problem_slug):
       lang
       runtime
       memory
+      code
       }
         }
         """
@@ -127,3 +128,16 @@ def fetch_hints(problem_slug):
         hints = data["data"]["question"]["hints"]
         return hints
     return []
+
+def fetch_random_question():
+    url = "https://leetcode-api-pied.vercel.app/random"
+
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = response.json()
+        return {
+            "title": data["title"],
+            "titleSlug": data["title_slug"],
+            "link": data["url"]
+        }
+    return None

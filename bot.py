@@ -5,7 +5,7 @@ from discord.ext import commands
 import os
 TOKEN = os.getenv('DISCORD_BOT_TOKEN')
 
-from utils import fetch_daily_question, save_links, fetch_lc_stats, load_links, fetch_submission, fetch_hints
+from utils import fetch_daily_question, save_links, fetch_lc_stats, load_links, fetch_submission, fetch_hints, fetch_random_question
 from discord.ext import tasks
 from discord import app_commands
 from datetime import time
@@ -119,6 +119,7 @@ async def show_solution(interaction: discord.Interaction, problem_slug: str = No
     discord_id = interaction.user.id
     links = load_links()
     leetcode_username = links.get(str(discord_id))
+    
     if leetcode_username is None:
         await interaction.response.send_message("You have not bound a Leetcode username yet. Please use /bind_profile command first.")
         return
@@ -180,6 +181,17 @@ async def show_solution(interaction: discord.Interaction, problem_slug: str = No
         value=f"```{memory}```",
         inline=True
     )
+
+    code = latest_submission.get('code', 'N/A')
+    print("CODE LENGTH:", len(code))
+    if code != 'N/A':
+        if len(code) > 1024:
+            code = code[:1021] + "..."
+        embed.add_field(
+            name="📝 Code",
+            value=f"```{lang.lower()}\n{code}\n```",
+            inline=False
+        )
     
     timestamp = latest_submission.get('timestamp', 'N/A')
     if timestamp != 'N/A':
@@ -236,6 +248,18 @@ async def give_hint(interaction: discord.Interaction, problem_slug: str = None):
                           color=discord.Color.green())
     for idx, hint in enumerate(hints, start=1):
         embed.add_field(name=f"Hint {idx}", value=hint, inline=False)
+    await interaction.response.send_message(embed=embed)
+
+@bot.tree.command(name='random_question', description="Get a random LeetCode question")
+@app_commands.describe()
+async def random_question(interaction: discord.Interaction):
+    question = fetch_random_question()
+    if not question:
+        await interaction.response.send_message("Could not fetch a random question.")
+        return
+    embed = discord.Embed(title=f"{question['title']}",
+                          url=f"https://leetcode.com/problems/{question['titleSlug']}/",
+                          color=discord.Color.blue())
     await interaction.response.send_message(embed=embed)
 
 @tasks.loop(time=time(hour=6, minute=0, second=0, tzinfo=pytz.timezone('Asia/Ho_Chi_Minh')))
