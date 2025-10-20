@@ -76,6 +76,11 @@ def fetch_lc_stats(leetcode_username):
     return None
 
 def fetch_submission(leetcode_username, problem_slug):
+    """
+    Fetch submission data for a user and problem.
+    Note: The 'code' field requires authentication and won't be available
+    through the public API. We can only get submission metadata.
+    """
     url = f"https://leetcode.com/graphql"
     query = """
     query recentAcSubmissions($username: String!, $limit: Int!){
@@ -87,7 +92,7 @@ def fetch_submission(leetcode_username, problem_slug):
       lang
       runtime
       memory
-      code
+      url
       }
         }
         """
@@ -101,14 +106,29 @@ def fetch_submission(leetcode_username, problem_slug):
     if response.status_code == 200:
         data = response.json()
         
+        # Check for errors (like private profiles)
+        if "errors" in data:
+            print(f"⚠️  LeetCode API error: {data['errors']}")
+            return []
+        
         if data.get("data") and data["data"].get("recentAcSubmissionList"):
             submissions = data["data"]["recentAcSubmissionList"]
+            print(f"📊 Found {len(submissions)} total submissions for {leetcode_username}")
+            
             matching_submissions = []
             for s in submissions:
                 if s["titleSlug"] == problem_slug:
                     matching_submissions.append(s)
+                    print(f"✅ Found matching submission for {problem_slug}")
+            
             if matching_submissions:
                 return matching_submissions
+            else:
+                print(f"❌ No submissions found for problem: {problem_slug}")
+                # Show what's available
+                if submissions:
+                    available = [s["titleSlug"] for s in submissions[:5]]
+                    print(f"💡 Recent problems: {', '.join(available)}")
     return []
 def fetch_hints(problem_slug):
     url = f"https://leetcode.com/graphql"
@@ -130,14 +150,28 @@ def fetch_hints(problem_slug):
     return []
 
 def fetch_random_question():
-    url = "https://leetcode-api-pied.vercel.app/random"
-
-    response = requests.get(url)
-    if response.status_code == 200:
-        data = response.json()
-        return {
-            "title": data["title"],
-            "titleSlug": data["title_slug"],
-            "link": data["url"]
+    url = "https://leetcode.com/graphql"
+    query = {
+        "query": """
+        query questionOfToday {
+          activeDailyCodingChallengeQuestion {
+            date
+            link
+            question {
+              title
+              titleSlug
+              difficulty
+            }
+          }
         }
-    return None
+        """
+    }
+    response = requests.post(url, json = query).json()
+    q = response["data"]["activeDailyCodingChallengeQuestion"]
+    question = q["question"]
+    return {
+        "title": question["title"],
+        "titleSlug": question["titleSlug"],
+        "difficulty": question["difficulty"],
+        "link": "https://leetcode.com" + q["link"]
+    }

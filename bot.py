@@ -181,26 +181,26 @@ async def show_solution(interaction: discord.Interaction, problem_slug: str = No
         value=f"```{memory}```",
         inline=True
     )
-
-    code = latest_submission.get('code', 'N/A')
-    print("CODE LENGTH:", len(code))
-    if code != 'N/A':
-        if len(code) > 1024:
-            code = code[:1021] + "..."
-        embed.add_field(
-            name="📝 Code",
-            value=f"```{lang.lower()}\n{code}\n```",
-            inline=False
-        )
     
     timestamp = latest_submission.get('timestamp', 'N/A')
     if timestamp != 'N/A':
         from datetime import datetime
         dt = datetime.fromtimestamp(int(timestamp))
         embed.add_field(
-            name="📅 Submitted",
+            name="� Submitted",
             value=f"```{dt.strftime('%Y-%m-%d %H:%M')}```",
             inline=True
+        )
+    
+    submission_url = latest_submission.get('url').replace('/detail','')[1:]
+    full_url = f"https://leetcode.com/problems/{latest_submission['titleSlug']}/{submission_url}"
+    print("submission_url:", full_url)
+
+    if submission_url:
+        embed.add_field(
+            name="� View Full Submission",
+            value=f"[Click here to view your code]({full_url})",
+            inline=False
         )
     
     embed.set_thumbnail(url="https://assets.leetcode.com/static_assets/public/icons/icon-192x192.png")
