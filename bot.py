@@ -5,7 +5,7 @@ from discord.ext import commands
 import os
 TOKEN = os.getenv('DISCORD_BOT_TOKEN')
 
-from utils import fetch_daily_question, save_links, fetch_lc_stats, load_links, fetch_submission, fetch_hints, fetch_random_question
+from utils import fetch_daily_question, save_links, fetch_lc_stats, load_links, fetch_submission, fetch_hints
 from discord.ext import tasks
 from discord import app_commands
 from datetime import time
@@ -119,7 +119,6 @@ async def show_solution(interaction: discord.Interaction, problem_slug: str = No
     discord_id = interaction.user.id
     links = load_links()
     leetcode_username = links.get(str(discord_id))
-    
     if leetcode_username is None:
         await interaction.response.send_message("You have not bound a Leetcode username yet. Please use /bind_profile command first.")
         return
@@ -187,20 +186,9 @@ async def show_solution(interaction: discord.Interaction, problem_slug: str = No
         from datetime import datetime
         dt = datetime.fromtimestamp(int(timestamp))
         embed.add_field(
-            name="� Submitted",
+            name="📅 Submitted",
             value=f"```{dt.strftime('%Y-%m-%d %H:%M')}```",
             inline=True
-        )
-    
-    submission_url = latest_submission.get('url').replace('/detail','')[1:]
-    full_url = f"https://leetcode.com/problems/{latest_submission['titleSlug']}/{submission_url}"
-    print("submission_url:", full_url)
-
-    if submission_url:
-        embed.add_field(
-            name="� View Full Submission",
-            value=f"[Click here to view your code]({full_url})",
-            inline=False
         )
     
     embed.set_thumbnail(url="https://assets.leetcode.com/static_assets/public/icons/icon-192x192.png")
@@ -248,18 +236,6 @@ async def give_hint(interaction: discord.Interaction, problem_slug: str = None):
                           color=discord.Color.green())
     for idx, hint in enumerate(hints, start=1):
         embed.add_field(name=f"Hint {idx}", value=hint, inline=False)
-    await interaction.response.send_message(embed=embed)
-
-@bot.tree.command(name='random_question', description="Get a random LeetCode question")
-@app_commands.describe()
-async def random_question(interaction: discord.Interaction):
-    question = fetch_random_question()
-    if not question:
-        await interaction.response.send_message("Could not fetch a random question.")
-        return
-    embed = discord.Embed(title=f"{question['title']}",
-                          url=f"https://leetcode.com/problems/{question['titleSlug']}/",
-                          color=discord.Color.blue())
     await interaction.response.send_message(embed=embed)
 
 @tasks.loop(time=time(hour=6, minute=0, second=0, tzinfo=pytz.timezone('Asia/Ho_Chi_Minh')))
@@ -335,6 +311,12 @@ async def post_daily_question():
         embed.add_field(
             name=f"{emoji} Difficulty",
             value=f"```{difficulty}```",
+            inline=True
+        )
+
+        embed.add_field(
+            name="🔥 Acceptance Rate",
+            value=f"```{question['acRate']}```",
             inline=True
         )
         
