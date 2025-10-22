@@ -238,7 +238,7 @@ async def give_hint(interaction: discord.Interaction, problem_slug: str = None):
         embed.add_field(name=f"Hint {idx}", value=hint, inline=False)
     await interaction.response.send_message(embed=embed)
 
-@tasks.loop(time=time(hour=6, minute=0, second=0, tzinfo=pytz.timezone('Asia/Ho_Chi_Minh')))
+@tasks.loop(time=time(hour=9, minute=0, second=0, tzinfo=pytz.timezone('Asia/Ho_Chi_Minh')))
 async def daily_question():
     print("Sending daily question (scheduled)...")
     await post_daily_question()
